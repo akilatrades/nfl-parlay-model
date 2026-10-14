@@ -1,0 +1,13 @@
+[project]
+name = "nfl-parlay-model"
+version = "0.1.0"
+description = "NFL player-prop and same-game parlay pricing model, built and tested in phases"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "Akila Juan"}]
+keywords = ["sports-betting", "player-props", "same-game-parlay", "pricing", "nfl", "python"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"

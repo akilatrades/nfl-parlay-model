@@ -1,0 +1,31 @@
+{
+  "test_seasons": [
+    2019,
+    2026
+  ],
+  "predictions": 424238,
+  "player_games": 125803,
+  "data_retrieval": {
+    "retrieved": "2026-10-14",
+    "seasons": [
+      2012,
+      2026
+    ],
+    "last_completed_week": {
+      "season": 2026,
+      "week": 5
+    },
+    "sources": {
+      "games": "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv",
+      "player_week": "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_{season}.csv"
+    },
+    "rows": {
+      "games": 3935,
+      "player_week": 81921
+    },
+    "sha256": {
+      "games.csv": "2444a451a8464771e085fa4de24ea565045604ac87f97e155e8163d29eafaec9",
+      "player_week.csv.gz": "1228f3905f4ed9c48e6260babeab5cfad07482a4a8ec63703a2969c4d5ca5a95"
+    }
+  }
+}

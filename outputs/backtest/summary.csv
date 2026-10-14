@@ -1,0 +1,7 @@
+stat,label,player_games,mae,mae_naive,brier,brier_naive,brier_improvement_pct,log_loss,log_loss_naive,log_loss_improvement_pct,at_or_below_q10,at_or_below_q50,at_or_below_q90
+receiving_yards,"Receiving yards (WR, TE, RB)",35774,16.9955,17.0918,0.0937,0.0947,1.1074,0.2987,0.3046,1.9406,0.2864,0.5261,0.9017
+receptions,"Receptions (WR, TE, RB)",35774,1.3106,1.3135,0.1009,0.1014,0.5554,0.319,0.3217,0.8548,0.2727,0.5236,0.9011
+rushing_yards,Rushing yards (RB),11055,19.0803,19.1442,0.1109,0.1118,0.7646,0.3494,0.3535,1.1541,0.2548,0.5385,0.9006
+passing_yards,Passing yards (starting QB),3713,58.7336,65.2386,0.1918,0.2009,4.513,0.5658,0.5919,4.4162,0.1075,0.502,0.8968
+passing_tds,Passing TDs (starting QB),3713,0.8974,0.9331,0.1792,0.1902,5.7719,0.5364,0.5708,6.0345,0.2394,0.6501,0.9478
+skill_tds,"Anytime TD, rushing or receiving (WR, TE, RB)",35774,0.3378,0.3389,0.1431,0.1486,3.7096,0.4488,0.468,4.1077,0.8029,0.8085,0.9605
