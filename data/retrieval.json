@@ -19,8 +19,8 @@
     "injuries": 23356
   },
   "sha256": {
-    "games.csv": "f4b0c7e125c97a6527d947cb19cf7c940cfed9eff5581b74da6f670b81067974",
-    "player_week.csv.gz": "6544c49ff9858e914f17b23e3cca660cc7a47455e07b83390e0509f48346e857",
-    "injuries.csv.gz": "afdff61d62e577819b5aa949bd084b5ade028484d2d3460070468b6df5450b7a"
+    "games.csv": "9ea0b6a4df95c8a4e306daab8ed8c44b816fb8dfe48728fd449584b6a99e04dc",
+    "player_week.csv.gz": "4a2b1c95fe3f1b177bbf1c5cbde2279090e18663836279dea269b11cbec58ec5",
+    "injuries.csv.gz": "e3b1f90d8b3940d4f9a048a5a3e762026a94687aa991dfd4065b32d0437a84bc"
   }
 }

@@ -1,0 +1,35 @@
+name: log Kalshi prices
+# Snapshots of Kalshi's NFL player-prop prices: once a day, plus shortly
+# before each kickoff window (times are UTC; NFL games are on US Eastern).
+on:
+  schedule:
+    - cron: "30 14 * * *"     # daily
+    - cron: "30 16 * * 0"     # Sunday, before 1pm ET games
+    - cron: "45 19 * * 0"     # Sunday, before late-afternoon games
+    - cron: "45 23 * * 0,1,4" # Sunday, Monday, Thursday night games
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: repo-writes
+  cancel-in-progress: false
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python log_kalshi.py
+      - run: python compare_market.py
+      - name: Commit snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/kalshi outputs/market
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Kalshi snapshot"
+          git pull --rebase
+          git push

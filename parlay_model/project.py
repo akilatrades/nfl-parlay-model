@@ -8,6 +8,16 @@ from parlay_model.features import build_features, model_rows
 from parlay_model.marginals import STATS, fit_all
 
 PERCENTILES = [0.1, 0.25, 0.5, 0.75, 0.9]
+# Lines at which to save over-probabilities, matching prop ladders such as
+# "80+ receiving yards" (79.5).
+LADDER = {
+    "receiving_yards": np.arange(4.5, 250, 5),
+    "rushing_yards": np.arange(4.5, 250, 5),
+    "passing_yards": np.arange(99.5, 450, 5),
+    "receptions": np.arange(0.5, 15, 1),
+    "passing_tds": np.arange(0.5, 5, 1),
+    "skill_tds": np.arange(0.5, 3, 1),
+}
 YARDAGE = ["receiving_yards", "receptions", "rushing_yards", "passing_yards"]
 
 
@@ -26,7 +36,8 @@ def project_week(games, players, season, week, injuries=None):
     """Fit on every game before ``week`` and project each eligible player.
 
     Returns one row per player and stat with the expected value, the
-    10th-90th percentiles and, for touchdowns, the chance of each count.
+    10th-90th percentiles and, for touchdowns, the chance of each count;
+    the fitted models; and a ladder of over-probabilities at standard lines.
     Players listed Out or Doubtful are left out, and their recent targets
     and carries are handed to teammates through the vacated-usage features.
     Run it after the final injury report (Friday, or Thursday for Thursday
@@ -48,7 +59,7 @@ def project_week(games, players, season, week, injuries=None):
     target = rows[(rows.season == season) & (rows.week == week)]
     models = fit_all(train)
 
-    out = []
+    out, ladder = [], []
     for name, model in models.items():
         spec = STATS[name]
         eligible = target[spec.eligible(target)]
@@ -78,4 +89,26 @@ def project_week(games, players, season, week, injuries=None):
                     model.prob_over(eligible, k - 0.5, mean), 4
                 )
         out.append(record)
-    return pd.concat(out, ignore_index=True), models
+        ladder.append(
+            pd.DataFrame(
+                {
+                    "game_id": np.repeat(
+                        eligible.game_id.to_numpy(), len(LADDER[name])
+                    ),
+                    "player": np.repeat(
+                        eligible.player_display_name.to_numpy(), len(LADDER[name])
+                    ),
+                    "player_id": np.repeat(
+                        eligible.player_id.to_numpy(), len(LADDER[name])
+                    ),
+                    "stat": name,
+                    "line": np.tile(LADDER[name], len(eligible)),
+                    "p_over": np.column_stack(
+                        [model.prob_over(eligible, line, mean) for line in LADDER[name]]
+                    ).ravel(),
+                }
+            )
+        )
+    ladder = pd.concat(ladder, ignore_index=True)
+    ladder["p_over"] = ladder.p_over.round(4)
+    return pd.concat(out, ignore_index=True), models, ladder

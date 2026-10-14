@@ -1,0 +1,34 @@
+name: refresh data and projections
+# Daily: new box scores, lines and injury reports from nflverse, then
+# projections and a probability ladder for the next week, then the
+# model-vs-Kalshi comparison.
+on:
+  schedule:
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: repo-writes
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python fetch_data.py
+      - run: python run_projections.py
+      - run: python compare_market.py
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data outputs
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Refresh data and projections"
+          git pull --rebase
+          git push

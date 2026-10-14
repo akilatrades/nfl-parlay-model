@@ -18,6 +18,8 @@ from pathlib import Path
 import pandas as pd
 
 FIRST_SEASON, CURRENT_SEASON = 2012, 2026
+# Fixed gzip timestamp: unchanged data produces an identical file.
+GZIP = {"method": "gzip", "mtime": 0}
 DATA = Path("data")
 GAMES_URL = "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv"
 PLAYER_URL = (
@@ -29,6 +31,7 @@ GAME_COLUMNS = [
     "season",
     "week",
     "gameday",
+    "gametime",
     "away_team",
     "home_team",
     "away_score",
@@ -115,14 +118,14 @@ def main():
         ]
         frames.append(weekly[PLAYER_COLUMNS])
     players = pd.concat(frames, ignore_index=True)
-    players.to_csv(DATA / "player_week.csv.gz", index=False)
+    players.to_csv(DATA / "player_week.csv.gz", index=False, compression=GZIP)
 
     reports = []
     for season in range(FIRST_SEASON, CURRENT_SEASON + 1):
         report = pd.read_csv(INJURY_URL.format(season=season), low_memory=False)
         reports.append(report.loc[report.game_type == "REG", INJURY_COLUMNS])
     injuries = pd.concat(reports, ignore_index=True)
-    injuries.to_csv(DATA / "injuries.csv.gz", index=False)
+    injuries.to_csv(DATA / "injuries.csv.gz", index=False, compression=GZIP)
 
     injuries = []
     for season in range(FIRST_SEASON, CURRENT_SEASON + 1):
@@ -133,7 +136,7 @@ def main():
         ]
         injuries.append(report[INJURY_COLUMNS])
     injuries = pd.concat(injuries, ignore_index=True)
-    injuries.to_csv(DATA / "injuries.csv.gz", index=False)
+    injuries.to_csv(DATA / "injuries.csv.gz", index=False, compression=GZIP)
 
     played = games[games.home_score.notna()]
     retrieval = {

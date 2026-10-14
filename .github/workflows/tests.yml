@@ -1,6 +1,7 @@
 name: tests
 on:
   push:
+    paths-ignore: ["data/**", "outputs/**"]
   pull_request:
 permissions:
   contents: read
