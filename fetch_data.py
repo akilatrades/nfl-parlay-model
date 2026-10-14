@@ -5,7 +5,6 @@ Writes:
                               including upcoming games of the current season
     data/player_week.csv.gz   weekly box scores for QB, RB, FB, WR and TE
     data/injuries.csv.gz      weekly injury reports (game status) for those positions
-    data/injuries.csv.gz      weekly injury reports (game status, practice)
 
 Run from the repository root: python fetch_data.py
 """
@@ -46,20 +45,6 @@ GAME_COLUMNS = [
     "home_qb_id",
     "away_qb_name",
     "home_qb_name",
-]
-INJURY_URL = (
-    "https://github.com/nflverse/nflverse-data/releases/download/"
-    "injuries/injuries_{season}.csv"
-)
-INJURY_COLUMNS = [
-    "season",
-    "week",
-    "team",
-    "gsis_id",
-    "full_name",
-    "position",
-    "report_status",
-    "practice_status",
 ]
 INJURY_URL = (
     "https://github.com/nflverse/nflverse-data/releases/download/"
@@ -119,13 +104,6 @@ def main():
         frames.append(weekly[PLAYER_COLUMNS])
     players = pd.concat(frames, ignore_index=True)
     players.to_csv(DATA / "player_week.csv.gz", index=False, compression=GZIP)
-
-    reports = []
-    for season in range(FIRST_SEASON, CURRENT_SEASON + 1):
-        report = pd.read_csv(INJURY_URL.format(season=season), low_memory=False)
-        reports.append(report.loc[report.game_type == "REG", INJURY_COLUMNS])
-    injuries = pd.concat(reports, ignore_index=True)
-    injuries.to_csv(DATA / "injuries.csv.gz", index=False, compression=GZIP)
 
     injuries = []
     for season in range(FIRST_SEASON, CURRENT_SEASON + 1):
