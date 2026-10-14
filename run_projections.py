@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from parlay_model.data import load
+from parlay_model.data import load, load_injuries
 from parlay_model.marginals import FEATURE_NAMES, STATS
 from parlay_model.project import project_week
 
@@ -27,7 +27,7 @@ def main():
         season, week = int(sys.argv[1]), int(sys.argv[2])
     else:
         season, week = next_week(games)
-    projections, models = project_week(games, players, season, week)
+    projections, models = project_week(games, players, season, week, load_injuries())
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / f"{season}_week{week:02d}.csv"
     projections.sort_values(["stat", "expected"], ascending=[True, False]).to_csv(

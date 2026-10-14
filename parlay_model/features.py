@@ -14,6 +14,8 @@ Two kinds of player history:
 import numpy as np
 import pandas as pd
 
+from parlay_model.data import ruled_out
+
 HALF_LIFE = 4
 EFFICIENCY_WINDOW = 24
 MIN_PRIOR_GAMES = 3
@@ -116,7 +118,71 @@ def team_features(frame):
     return teams[keep + ["def_pass_allowed", "def_rush_allowed"]]
 
 
-def build_features(frame):
+MAX_VACATED = 0.6
+
+
+def vacated_usage(frame, injuries):
+    """Share of the team's last game that belonged to players now ruled out.
+
+    If the WR1 had 28% of the targets last week and is Out this week, the
+    team has 0.28 of its targets to hand to everyone else. Only players who
+    played in the team's previous game (same season) count, so a player who
+    has been out for weeks is not counted again: his teammates' recent
+    shares already reflect his absence.
+
+    Returns the vacated shares by team-game, split by the position group of
+    the player who is out, so a receiver can gain more when another receiver
+    is missing than when a running back is.
+    """
+    teams = (
+        frame[["game_id", "season", "week", "team"]]
+        .drop_duplicates(["game_id", "team"])
+        .sort_values(["season", "week"])
+        .reset_index(drop=True)
+    )
+    previous = teams.groupby("team")[["game_id", "season"]].shift()
+    teams["prev_game_id"] = previous.game_id.where(previous.season == teams.season)
+    last = frame.loc[
+        frame.targets.notna(),
+        ["game_id", "team", "player_id", "pos_group", "target_share", "carry_share"],
+    ].rename(columns={"game_id": "prev_game_id"})
+    out = ruled_out(injuries).merge(teams, on=["season", "week", "team"])
+    out = out.merge(last, on=["prev_game_id", "team", "player_id"])
+    return (
+        out.groupby(["game_id", "team", "pos_group"])[["target_share", "carry_share"]]
+        .sum()
+        .rename(
+            columns={
+                "target_share": "vacated_targets",
+                "carry_share": "vacated_carries",
+            }
+        )
+        .reset_index()
+    )
+
+
+def add_vacated(frame, injuries):
+    """Vacated targets and carries for each row: same position group vs other."""
+    columns = ["vacated_targets", "vacated_carries"]
+    if injuries is None:
+        for column in columns:
+            frame[column] = 0.0
+            frame[f"{column}_same"] = 0.0
+        return frame
+    by_position = vacated_usage(frame, injuries)
+    totals = by_position.groupby(["game_id", "team"])[columns].sum().reset_index()
+    same = by_position.rename(columns={c: f"{c}_same" for c in columns})
+    frame = frame.merge(totals, on=["game_id", "team"], how="left")
+    frame = frame.merge(same, on=["game_id", "team", "pos_group"], how="left")
+    for column in columns:
+        frame[column] = frame[column].fillna(0.0).clip(upper=MAX_VACATED)
+        frame[f"{column}_same"] = (
+            frame[f"{column}_same"].fillna(0.0).clip(upper=frame[column])
+        )
+    return frame
+
+
+def build_features(frame, injuries=None):
     """Add prior-only usage, efficiency and team features to player-game rows.
 
     ``frame`` holds played games (with outcomes) and, optionally, upcoming
@@ -145,7 +211,7 @@ def build_features(frame):
         frame[name] = (numer + strength * frame[f"mu_{name}"]) / (denom + strength)
 
     frame = frame.merge(team_features(frame), on=["game_id", "team"], how="left")
-    return frame
+    return add_vacated(frame, injuries)
 
 
 def model_rows(frame, min_prior=MIN_PRIOR_GAMES):

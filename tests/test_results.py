@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from parlay_model.data import load, player_games
+from parlay_model.data import load, load_injuries, player_games
 from parlay_model.evaluate import summarize, walk_forward
 from parlay_model.features import build_features, model_rows
 
@@ -11,7 +11,7 @@ from parlay_model.features import build_features, model_rows
 @pytest.fixture(scope="module")
 def summary_2025():
     games, players = load()
-    rows = model_rows(build_features(player_games(games, players)))
+    rows = model_rows(build_features(player_games(games, players), load_injuries()))
     return summarize(walk_forward(rows, [2025])).set_index("stat")
 
 

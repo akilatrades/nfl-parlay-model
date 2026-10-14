@@ -45,6 +45,17 @@ def _exp_carries(rows):
     return rows.ew_carry_share * rows.ew_team_carries
 
 
+def _redistribution(rows, column):
+    """Vacated share from players in the same position group, and from others.
+
+    Each enters as log(1 / (1 - share)); spreading the missing volume over
+    everyone in proportion to their usage would give both a coefficient of 1.
+    """
+    same = rows[f"{column}_same"]
+    other = rows[column] - same
+    return np.column_stack([-np.log(1 - same), -np.log(1 - other)])
+
+
 def _is(rows, group):
     return (rows.pos_group == group).astype(float)
 
@@ -62,6 +73,7 @@ def receiving_features(rows):
             np.log1p(rows.n_prior),
             _log(rows.ew_receiving_yards, 1.0),
             np.log(rows.def_pass_allowed),
+            _redistribution(rows, "vacated_targets"),
         ]
     )
 
@@ -78,6 +90,7 @@ def reception_features(rows):
             _is(rows, "RB") * rows.p_win,
             _log(rows.ew_receptions, 0.5),
             np.log(rows.def_pass_allowed),
+            _redistribution(rows, "vacated_targets"),
         ]
     )
 
@@ -91,6 +104,7 @@ def rushing_features(rows):
             rows.p_win,
             _log(rows.ew_rushing_yards, 1.0),
             np.log(rows.def_rush_allowed),
+            _redistribution(rows, "vacated_carries"),
         ]
     )
 
@@ -221,6 +235,8 @@ FEATURE_NAMES = {
         "log games played",
         "log recent receiving yards",
         "log opponent pass yards allowed",
+        "teammates out, same position: targets to redistribute",
+        "teammates out, other positions: targets to redistribute",
     ],
     "receptions": [
         "log expected targets",
@@ -232,6 +248,8 @@ FEATURE_NAMES = {
         "is RB x win probability",
         "log recent receptions",
         "log opponent pass yards allowed",
+        "teammates out, same position: targets to redistribute",
+        "teammates out, other positions: targets to redistribute",
     ],
     "rushing_yards": [
         "log expected carries",
@@ -240,6 +258,8 @@ FEATURE_NAMES = {
         "win probability",
         "log recent rushing yards",
         "log opponent rush yards allowed",
+        "teammates out, same position: carries to redistribute",
+        "teammates out, other positions: carries to redistribute",
     ],
     "passing_yards": [
         "log team pass attempts",

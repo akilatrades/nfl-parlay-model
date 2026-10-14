@@ -80,3 +80,30 @@ def test_defense_allowed_is_from_earlier_games():
     # Opponent BBB allowed 230 passing yards in each earlier game.
     assert np.isnan(frame.def_pass_allowed.iloc[0])
     assert frame.def_pass_allowed.iloc[2] == pytest.approx(230)
+
+
+def test_vacated_usage_counts_only_players_newly_ruled_out():
+    wr1 = games_for("WR1", [9, 9, 9], [90, 90, 90])
+    wr2 = games_for("WR2", [6, 6, 6], [60, 60, 60])
+    te = games_for("TE1", [3, 3, 3], [30, 30, 30], position="TE")
+    # A receiver who last played in week 1 and stays out.
+    gone = games_for("OLD", [6], [60])
+    frame = pd.concat([wr1, wr2, te, gone], ignore_index=True)
+    # Week 3: WR1 played week 2 (30% of targets) and is now Out.
+    injuries = pd.DataFrame(
+        {
+            "season": 2024,
+            "week": [3, 3],
+            "team": "AAA",
+            "player_id": ["WR1", "OLD"],
+            "report_status": ["Out", "Out"],
+        }
+    )
+    frame = frame[~((frame.player_id == "WR1") & (frame.week == 3))]
+    built = build_features(frame, injuries)
+    week3 = built[built.week == 3].set_index("player_id")
+    assert week3.loc["WR2", "vacated_targets"] == pytest.approx(9 / 30)
+    assert week3.loc["WR2", "vacated_targets_same"] == pytest.approx(9 / 30)
+    assert week3.loc["TE1", "vacated_targets_same"] == 0
+    # Without an injury report nothing is vacated.
+    assert (build_features(frame).vacated_targets == 0).all()

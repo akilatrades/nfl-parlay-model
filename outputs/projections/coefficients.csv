@@ -1,29 +1,35 @@
 stat,feature,coefficient
-receiving_yards,log expected targets,0.6806
-receiving_yards,log yards per target,0.4286
-receiving_yards,log implied team points,0.3444
-receiving_yards,win probability,-0.1151
-receiving_yards,is TE,-0.0461
-receiving_yards,is RB,-0.1451
-receiving_yards,is RB x win probability,-0.0326
-receiving_yards,log games played,-0.0375
-receiving_yards,log recent receiving yards,0.2639
-receiving_yards,log opponent pass yards allowed,0.2033
-receptions,log expected targets,0.5075
-receptions,log catch rate,0.3396
-receptions,log implied team points,0.1504
-receptions,win probability,-0.0892
-receptions,is TE,0.0213
-receptions,is RB,0.027
-receptions,is RB x win probability,-0.0694
-receptions,log recent receptions,0.5109
-receptions,log opponent pass yards allowed,0.2358
-rushing_yards,log expected carries,0.3871
-rushing_yards,log yards per carry,0.1705
-rushing_yards,log implied team points,-0.0744
-rushing_yards,win probability,0.1957
-rushing_yards,log recent rushing yards,0.5479
-rushing_yards,log opponent rush yards allowed,0.3828
+receiving_yards,log expected targets,0.6861
+receiving_yards,log yards per target,0.4249
+receiving_yards,log implied team points,0.3743
+receiving_yards,win probability,-0.1281
+receiving_yards,is TE,-0.035
+receiving_yards,is RB,-0.1292
+receiving_yards,is RB x win probability,-0.0369
+receiving_yards,log games played,-0.0386
+receiving_yards,log recent receiving yards,0.2662
+receiving_yards,log opponent pass yards allowed,0.207
+receiving_yards,"teammates out, same position: targets to redistribute",1.1495
+receiving_yards,"teammates out, other positions: targets to redistribute",0.3168
+receptions,log expected targets,0.5053
+receptions,log catch rate,0.3211
+receptions,log implied team points,0.1761
+receptions,win probability,-0.1004
+receptions,is TE,0.0332
+receptions,is RB,0.0451
+receptions,is RB x win probability,-0.0744
+receptions,log recent receptions,0.5217
+receptions,log opponent pass yards allowed,0.2385
+receptions,"teammates out, same position: targets to redistribute",1.0764
+receptions,"teammates out, other positions: targets to redistribute",0.2547
+rushing_yards,log expected carries,0.3855
+rushing_yards,log yards per carry,0.1677
+rushing_yards,log implied team points,-0.0548
+rushing_yards,win probability,0.1886
+rushing_yards,log recent rushing yards,0.5604
+rushing_yards,log opponent rush yards allowed,0.3761
+rushing_yards,"teammates out, same position: carries to redistribute",0.5955
+rushing_yards,"teammates out, other positions: carries to redistribute",0.1732
 passing_yards,log team pass attempts,0.3215
 passing_yards,log yards per attempt,0.1706
 passing_yards,log implied team points,0.6747

@@ -131,3 +131,45 @@ def by_season(results):
         .apply(lambda g: g.p_model.mean() - g.over.mean(), include_groups=False)
         .unstack("season")
     )
+
+
+def injury_effect(with_injuries, without_injuries, rows, thresholds=(0.1, 0.2)):
+    """How the injury adjustment changed predictions when teammates were out.
+
+    Compares two backtests that differ only in whether the injury report is
+    used, on player-games where at least ``threshold`` of the team's targets
+    (carries, for rushing) belonged to teammates ruled out that week.
+    """
+    key = ["season", "week", "player_id", "stat", "line"]
+    merged = with_injuries.merge(
+        without_injuries[key + ["p_model", "mean"]], on=key, suffixes=("", "_without")
+    ).merge(
+        rows[["season", "week", "player_id", "vacated_targets", "vacated_carries"]],
+        on=["season", "week", "player_id"],
+    )
+    merged["vacated"] = merged.vacated_targets.where(
+        merged.stat != "rushing_yards", merged.vacated_carries
+    )
+    out = []
+    for stat in ["receiving_yards", "receptions", "rushing_yards"]:
+        for threshold in thresholds:
+            group = merged[(merged.stat == stat) & (merged.vacated >= threshold)]
+            first = group[group.line == group.line.min()]
+            brier_new = ((group.p_model - group.over) ** 2).mean()
+            brier_old = ((group.p_model_without - group.over) ** 2).mean()
+            out.append(
+                {
+                    "stat": stat,
+                    "vacated_at_least": threshold,
+                    "player_games": len(first),
+                    "actual_average": first.actual.mean(),
+                    "expected_without_injuries": first.mean_without.mean(),
+                    "expected_with_injuries": first["mean"].mean(),
+                    "brier_without": brier_old,
+                    "brier_with": brier_new,
+                    "brier_improvement_pct": 100 * (1 - brier_new / brier_old),
+                    "mae_without": (first.actual - first.mean_without).abs().mean(),
+                    "mae_with": (first.actual - first["mean"]).abs().mean(),
+                }
+            )
+    return pd.DataFrame(out)

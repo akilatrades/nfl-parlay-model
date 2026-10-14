@@ -9,11 +9,12 @@ from pathlib import Path
 import pandas as pd
 
 from parlay_model.chart import plot_calibration
-from parlay_model.data import load, player_games
+from parlay_model.data import load, load_injuries, player_games
 from parlay_model.evaluate import (
     by_line,
     by_season,
     calibration,
+    injury_effect,
     summarize,
     walk_forward,
 )
@@ -26,9 +27,17 @@ FIRST_TEST_SEASON = 2019
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     games, players = load()
-    rows = model_rows(build_features(player_games(games, players)))
+    injuries = load_injuries()
+    rows = model_rows(build_features(player_games(games, players), injuries))
     seasons = range(FIRST_TEST_SEASON, int(rows.season.max()) + 1)
     results = walk_forward(rows, seasons)
+    # Same backtest without the injury report, to measure what it adds.
+    without = walk_forward(
+        model_rows(build_features(player_games(games, players))), seasons
+    )
+    injury_effect(results, without, rows).round(4).to_csv(
+        OUT / "injury_effect.csv", index=False
+    )
 
     summary = summarize(results).round(4)
     lines = by_line(results).round(4)

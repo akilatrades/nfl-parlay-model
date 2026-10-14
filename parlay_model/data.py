@@ -13,10 +13,26 @@ TEAM_ALIASES = {"OAK": "LV", "SD": "LAC", "STL": "LA"}
 SKILL = ["WR", "TE", "RB", "FB"]
 
 
+# Injury-report statuses treated as "will not play".
+RULED_OUT = ["Out", "Doubtful"]
+
+
 def load(data=DATA):
     games = pd.read_csv(data / "games.csv")
     players = pd.read_csv(data / "player_week.csv.gz")
     return games, players
+
+
+def load_injuries(data=DATA):
+    injuries = pd.read_csv(data / "injuries.csv.gz")
+    injuries["team"] = injuries.team.replace(TEAM_ALIASES)
+    return injuries.rename(columns={"gsis_id": "player_id"})
+
+
+def ruled_out(injuries):
+    """Players listed Out or Doubtful on the final injury report for a week."""
+    out = injuries[injuries.report_status.isin(RULED_OUT)]
+    return out[["season", "week", "team", "player_id"]].drop_duplicates()
 
 
 def team_games(games):

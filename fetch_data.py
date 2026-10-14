@@ -4,6 +4,8 @@ Writes:
     data/games.csv            regular-season schedule, results and lines,
                               including upcoming games of the current season
     data/player_week.csv.gz   weekly box scores for QB, RB, FB, WR and TE
+    data/injuries.csv.gz      weekly injury reports (game status) for those positions
+    data/injuries.csv.gz      weekly injury reports (game status, practice)
 
 Run from the repository root: python fetch_data.py
 """
@@ -41,6 +43,33 @@ GAME_COLUMNS = [
     "home_qb_id",
     "away_qb_name",
     "home_qb_name",
+]
+INJURY_URL = (
+    "https://github.com/nflverse/nflverse-data/releases/download/"
+    "injuries/injuries_{season}.csv"
+)
+INJURY_COLUMNS = [
+    "season",
+    "week",
+    "team",
+    "gsis_id",
+    "full_name",
+    "position",
+    "report_status",
+    "practice_status",
+]
+INJURY_URL = (
+    "https://github.com/nflverse/nflverse-data/releases/download/"
+    "injuries/injuries_{season}.csv"
+)
+INJURY_COLUMNS = [
+    "season",
+    "week",
+    "team",
+    "gsis_id",
+    "position",
+    "full_name",
+    "report_status",
 ]
 PLAYER_COLUMNS = [
     "player_id",
@@ -88,6 +117,24 @@ def main():
     players = pd.concat(frames, ignore_index=True)
     players.to_csv(DATA / "player_week.csv.gz", index=False)
 
+    reports = []
+    for season in range(FIRST_SEASON, CURRENT_SEASON + 1):
+        report = pd.read_csv(INJURY_URL.format(season=season), low_memory=False)
+        reports.append(report.loc[report.game_type == "REG", INJURY_COLUMNS])
+    injuries = pd.concat(reports, ignore_index=True)
+    injuries.to_csv(DATA / "injuries.csv.gz", index=False)
+
+    injuries = []
+    for season in range(FIRST_SEASON, CURRENT_SEASON + 1):
+        report = pd.read_csv(INJURY_URL.format(season=season), low_memory=False)
+        report = report[
+            (report.game_type == "REG")
+            & report.position.isin(["QB", "RB", "FB", "WR", "TE"])
+        ]
+        injuries.append(report[INJURY_COLUMNS])
+    injuries = pd.concat(injuries, ignore_index=True)
+    injuries.to_csv(DATA / "injuries.csv.gz", index=False)
+
     played = games[games.home_score.notna()]
     retrieval = {
         "retrieved": datetime.now(UTC).date().isoformat(),
@@ -96,11 +143,20 @@ def main():
             "season": int(played.season.max()),
             "week": int(played[played.season == played.season.max()].week.max()),
         },
-        "sources": {"games": GAMES_URL, "player_week": PLAYER_URL},
-        "rows": {"games": len(games), "player_week": len(players)},
+        "sources": {
+            "games": GAMES_URL,
+            "player_week": PLAYER_URL,
+            "injuries": INJURY_URL,
+        },
+        "rows": {
+            "games": len(games),
+            "player_week": len(players),
+            "injuries": len(injuries),
+        },
         "sha256": {
             "games.csv": sha256(DATA / "games.csv"),
             "player_week.csv.gz": sha256(DATA / "player_week.csv.gz"),
+            "injuries.csv.gz": sha256(DATA / "injuries.csv.gz"),
         },
     }
     (DATA / "retrieval.json").write_text(json.dumps(retrieval, indent=2) + "\n")
